@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - Rockview University</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .auth-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .auth-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .logo-icon {
+            font-size: 2.5rem;
+            margin-right: 12px;
+        }
+        
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        .logo-text span {
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .auth-body {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        
+        .input-with-icon input,
+        .input-with-icon select {
+            width: 100%;
+            padding: 14px 14px 14px 45px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .input-with-icon input:focus,
+        .input-with-icon select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+        
+        .name-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .auth-button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .auth-button i {
+            margin-right: 10px;
+        }
+        
+        .auth-button:hover {
+            background: var(--primary-hover);
+        }
+        
+        .auth-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-error {
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success-color);
+            border: 1px solid #bbf7d0;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .auth-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: none;
+            border: none;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 480px) {
+            .auth-card {
+                border-radius: 12px;
+            }
+            
+            .auth-header, .auth-body {
+                padding: 25px 20px;
+            }
+            
+            .name-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap logo-icon"></i>
+                    <div class="logo-text">
+                        <h1>ROCKVIEW UNIVERSITY</h1>
+                        <span id="headerSubtitle">Student Portal</span>
+                    </div>
+                </div>
+                <p id="headerDescription">Sign in to your account</p>
+            </div>
+            
+            <div class="auth-body">
+                <div id="alertMessage" class="alert"></div>
+                
+                <div class="tab-container">
+                    <button class="tab active" onclick="switchTab('login')">Sign In</button>
+                    <button class="tab" onclick="switchTab('register')">Register</button>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="loginTab" class="tab-content active">
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email Address</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="loginEmail" placeholder="Enter your email address" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                                <button type="button" class="password-toggle" id="toggleLoginPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" id="rememberMe" style="margin-right: 8px;">
+                                    Remember me
+                                </label>
+                                <a href="#" class="auth-link" id="forgotPassword">Forgot password?</a>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="auth-button" id="loginButton">
+                            <span class="spinner" id="loginSpinner" style="display: none;"></span>
+                            <i class="fas fa-sign-in-alt"></i>
+                            Sign In
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Registration Form -->
+                <div id="registerTab" class="tab-content">
+                    <form id="registrationForm">
+                        <div class="name-fields">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="firstName" placeholder="Enter your first name" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="lastName" placeholder="Enter your last name" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="studentNumber">Student Number</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-id-card"></i>
+                                <input type="text" id="studentNumber" placeholder="2026-XXXXX" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registerEmail">Email Address</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="registerEmail" placeholder="student@rockview.edu" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="program">Program of Study</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                                <select id="program" required>
+                                    <option value="">Select Program</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Business Administration">Business Administration</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Psychology">Psychology</option>
+                                    <option value="Biology">Biology</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="level">Academic Level</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-layer-group"></i>
+                                <select id="level" required>
+                                    <option value="">Select Level</option>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registerPassword">Password</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="registerPassword" placeholder="Create password (min. 6 characters)" required>
+                                <button type="button" class="password-toggle" id="toggleRegisterPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                                <button type="button" class="password-toggle" id="toggleConfirmPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 25px;">
+                            <label style="display: flex; align-items: flex-start; cursor: pointer;">
+                                <input type="checkbox" id="terms" style="margin-right: 10px; margin-top: 3px;" required>
+                                <span style="font-size: 0.9rem;">
+                                    I agree to the <a href="#" class="auth-link">Terms and Conditions</a> and 
+                                    <a href="#" class="auth-link">Privacy Policy</a>
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="auth-button" id="registerButton">
+                            <span class="spinner" id="registerSpinner" style="display: none;"></span>
+                            <i class="fas fa-user-plus"></i>
+                            Create Account
+                        </button>
+                    </form>
+                </div>
+                
+             <div class="login-footer">
+                    <p>Staff member? <a href="staff-login.html" style="color: #3b3aed; text-decoration: none; font-weight: 500;">Go to Student Login</a></p>
+                    <p style="margin-top: 8px;"></p>
+                </div>
+                <div> 
+                     <p> Contact IT Support for access</p>
+                    <p style="margin-top: 8px;">Need help? Contact IT Support: support@rockview.edu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyClWU6f1WdKKnJo3a4EEdusWdKdXd5LL4A",
+            authDomain: "rockview-university-46057.firebaseapp.com",
+            projectId: "rockview-university-46057",
+            storageBucket: "rockview-university-46057.firebasestorage.app",
+            messagingSenderId: "481696025854",
+            appId: "1:481696025854:web:a2067380abde8f040c69af",
+            measurementId: "G-5ZWLWVN1M7"
+        };
+
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Tab switching function
+        function switchTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Activate selected tab
+            document.querySelector(`.tab:nth-child(${tabName === 'login' ? '1' : '2'})`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+            
+            // Update header
+            const headerSubtitle = document.getElementById('headerSubtitle');
+            const headerDescription = document.getElementById('headerDescription');
+            
+            if (tabName === 'login') {
+                headerSubtitle.textContent = 'Student Portal';
+                headerDescription.textContent = 'Sign in to your account';
+            } else {
+                headerSubtitle.textContent = 'Student Registration';
+                headerDescription.textContent = 'Create your student account';
+            }
+            
+            hideAlert();
+        }
+
+        // DOM Elements
+        const loginForm = document.getElementById('loginForm');
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const toggleLoginPasswordButton = document.getElementById('toggleLoginPassword');
+        const loginButton = document.getElementById('loginButton');
+        const loginSpinner = document.getElementById('loginSpinner');
+
+        const registrationForm = document.getElementById('registrationForm');
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+        const studentNumberInput = document.getElementById('studentNumber');
+        const registerEmailInput = document.getElementById('registerEmail');
+        const programInput = document.getElementById('program');
+        const levelInput = document.getElementById('level');
+        const registerPasswordInput = document.getElementById('registerPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const toggleRegisterPasswordButton = document.getElementById('toggleRegisterPassword');
+        const toggleConfirmPasswordButton = document.getElementById('toggleConfirmPassword');
+        const registerButton = document.getElementById('registerButton');
+        const registerSpinner = document.getElementById('registerSpinner');
+        const termsCheckbox = document.getElementById('terms');
+
+        const alertMessage = document.getElementById('alertMessage');
+        const forgotPasswordLink = document.getElementById('forgotPassword');
+
+        // Password toggle functionality
+        function setupPasswordToggle(button, input) {
+            button.addEventListener('click', function() {
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Initialize password toggles
+        setupPasswordToggle(toggleLoginPasswordButton, loginPasswordInput);
+        setupPasswordToggle(toggleRegisterPasswordButton, registerPasswordInput);
+        setupPasswordToggle(toggleConfirmPasswordButton, confirmPasswordInput);
+
+        // Show alert message
+        function showAlert(message, type) {
+            alertMessage.textContent = message;
+            alertMessage.className = 'alert';
+            alertMessage.classList.add(`alert-${type}`);
+            alertMessage.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Hide alert message
+        function hideAlert() {
+            alertMessage.style.display = 'none';
+        }
+
+        // Email validation
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Validate login form
+        function validateLoginForm() {
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            
+            if (!email) {
+                showAlert('Please enter your email address', 'error');
+                loginEmailInput.focus();
+                return false;
+            }
+            
+            if (!isValidEmail(email)) {
+                showAlert('Please enter a valid email address', 'error');
+                loginEmailInput.focus();
+                return false;
+            }
+            
+            if (!password) {
+                showAlert('Please enter your password', 'error');
+                loginPasswordInput.focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Validate registration form
+        function validateRegistrationForm() {
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const studentNumber = studentNumberInput.value.trim();
+            const email = registerEmailInput.value.trim();
+            const program = programInput.value;
+            const level = levelInput.value;
+            const password = registerPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const terms = termsCheckbox.checked;
+            
+            if (!firstName) {
+                showAlert('Please enter your first name', 'error');
+                firstNameInput.focus();
+                return false;
+            }
+            
+            if (!lastName) {
+                showAlert('Please enter your last name', 'error');
+                lastNameInput.focus();
+                return false;
+            }
+            
+            if (!studentNumber) {
+                showAlert('Please enter your student number', 'error');
+                studentNumberInput.focus();
+                return false;
+            }
+            
+            if (!studentNumber.match(/^\d{4}-[A-Z0-9]+$/)) {
+                showAlert('Student number must be in format: 2026-XXXXX', 'error');
+                studentNumberInput.focus();
+                return false;
+            }
+            
+            if (!email) {
+                showAlert('Please enter your email address', 'error');
+                registerEmailInput.focus();
+                return false;
+            }
+            
+            if (!isValidEmail(email)) {
+                showAlert('Please enter a valid email address', 'error');
+                registerEmailInput.focus();
+                return false;
+            }
+            
+            if (!program) {
+                showAlert('Please select your program of study', 'error');
+                programInput.focus();
+                return false;
+            }
+            
+            if (!level) {
+                showAlert('Please select your academic level', 'error');
+                levelInput.focus();
+                return false;
+            }
+            
+            if (!password) {
+                showAlert('Please create a password', 'error');
+                registerPasswordInput.focus();
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showAlert('Password must be at least 6 characters long', 'error');
+                registerPasswordInput.focus();
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                confirmPasswordInput.focus();
+                return false;
+            }
+            
+            if (!terms) {
+                showAlert('Please agree to the terms and conditions', 'error');
+                termsCheckbox.focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Student Authentication - Only allows student users
+        async function authenticateStudent(email, password) {
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Check if user is admin - DENY ACCESS
+                const adminDoc = await db.collection('admins').doc(user.uid).get();
+                
+                if (adminDoc.exists) {
+                    // User is admin - sign them out and deny access
+                    await auth.signOut();
+                    throw new Error('Access denied. Please use the staff login portal for administrative access.');
+                }
+                
+                // Check if user is student
+                const studentDoc = await db.collection('students').doc(user.uid).get();
+                
+                if (studentDoc.exists) {
+                    const studentData = studentDoc.data();
+                    return {
+                        success: true,
+                        user: {
+                            uid: user.uid,
+                            email: user.email,
+                            role: 'student',
+                            ...studentData
+                        }
+                    };
+                } else {
+                    // Auto-create student account if no account exists
+                    const studentData = {
+                        email: user.email,
+                        fullName: user.email.split('@')[0],
+                        studentNumber: generateStudentNumber(),
+                        program: 'Undecided',
+                        level: '1st Year',
+                        status: 'active',
+                        role: 'student',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    await db.collection('students').doc(user.uid).set(studentData);
+                    
+                    return {
+                        success: true,
+                        user: {
+                            uid: user.uid,
+                            email: user.email,
+                            role: 'student',
+                            ...studentData
+                        }
+                    };
+                }
+            } catch (error) {
+                let errorMessage = 'An error occurred during login';
+                
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address format';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = 'This account has been disabled';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = 'No student account found with this email';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed login attempts. Please try again later';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                
+                throw new Error(errorMessage);
+            }
+        }
+
+        function generateStudentNumber() {
+            const year = new Date().getFullYear();
+            const randomNum = Math.floor(Math.random() * 90000) + 10000;
+            return `${year}-${randomNum}`;
+        }
+
+        // Student registration
+        async function registerStudent(studentData) {
+            try {
+                // Create auth user
+                const userCredential = await auth.createUserWithEmailAndPassword(
+                    studentData.email, 
+                    studentData.password
+                );
+                
+                const userId = userCredential.user.uid;
+                
+                // Create student document in Firestore
+                await db.collection('students').doc(userId).set({
+                    studentNumber: studentData.studentNumber,
+                    firstName: studentData.firstName,
+                    lastName: studentData.lastName,
+                    fullName: `${studentData.firstName} ${studentData.lastName}`,
+                    email: studentData.email,
+                    program: studentData.program,
+                    level: studentData.level,
+                    status: 'active',
+                    role: 'student',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    balance: 0,
+                    payments: []
+                });
+                
+                return {
+                    success: true,
+                    user: {
+                        uid: userId,
+                        email: studentData.email,
+                        role: 'student',
+                        ...studentData
+                    }
+                };
+                
+            } catch (error) {
+                let errorMessage = 'Registration failed';
+                
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'Email already registered. Please use a different email.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address format.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'Password is too weak. Please choose a stronger password.';
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage = 'Registration is currently disabled. Please contact support.';
+                        break;
+                    default:
+                        errorMessage = `Registration failed: ${error.message}`;
+                }
+                
+                throw new Error(errorMessage);
+            }
+        }
+
+        // Handle login form submission
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateLoginForm()) return;
+            
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            // Show loading state
+            loginButton.disabled = true;
+            loginSpinner.style.display = 'inline-block';
+            loginButton.querySelector('i').style.display = 'none';
+            hideAlert();
+            
+            try {
+                const result = await authenticateStudent(email, password);
+                
+                if (result.success) {
+                    const userName = result.user.fullName || result.user.email.split('@')[0];
+                    showAlert(`Welcome back, ${userName}! Redirecting to student portal...`, 'success');
+                    
+                    // Store user data
+                    if (rememberMe) {
+                        localStorage.setItem('rememberMe', 'true');
+                        localStorage.setItem('userEmail', email);
+                    } else {
+                        sessionStorage.setItem('userEmail', email);
+                    }
+                    
+                    // Store user info for the dashboard
+                    localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    
+                    // Redirect to STUDENT dashboard only
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                showAlert(error.message, 'error');
+                
+                // Reset loading state
+                loginButton.disabled = false;
+                loginSpinner.style.display = 'none';
+                loginButton.querySelector('i').style.display = 'inline-block';
+            }
+        });
+
+        // Handle registration form submission
+        registrationForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateRegistrationForm()) return;
+            
+            const studentData = {
+                firstName: firstNameInput.value.trim(),
+                lastName: lastNameInput.value.trim(),
+                studentNumber: studentNumberInput.value.trim(),
+                email: registerEmailInput.value.trim(),
+                program: programInput.value,
+                level: levelInput.value,
+                password: registerPasswordInput.value
+            };
+            
+            // Show loading state
+            registerButton.disabled = true;
+            registerSpinner.style.display = 'inline-block';
+            registerButton.querySelector('i').style.display = 'none';
+            hideAlert();
+            
+            try {
+                const result = await registerStudent(studentData);
+                
+                if (result.success) {
+                    showAlert(`Registration successful! Welcome to Rockview University, ${studentData.firstName}!`, 'success');
+                    
+                    // Store user data
+                    localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    
+                    // Redirect to student dashboard after successful registration
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                }
+            } catch (error) {
+                showAlert(error.message, 'error');
+                
+                // Reset loading state
+                registerButton.disabled = false;
+                registerSpinner.style.display = 'none';
+                registerButton.querySelector('i').style.display = 'inline-block';
+            }
+        });
+
+        // Forgot password functionality
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = loginEmailInput.value.trim();
+            
+            if (!email || !isValidEmail(email)) {
+                showAlert('Please enter a valid email address to reset your password', 'error');
+                return;
+            }
+            
+            // Send password reset email
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    showAlert('Password reset email sent! Check your inbox for further instructions.', 'success');
+                })
+                .catch((error) => {
+                    let errorMessage = 'Failed to send reset email';
+                    
+                    switch (error.code) {
+                        case 'auth/invalid-email':
+                            errorMessage = 'Invalid email address';
+                            break;
+                        case 'auth/user-not-found':
+                            errorMessage = 'No student account found with this email';
+                            break;
+                        default:
+                            errorMessage = error.message;
+                    }
+                    
+                    showAlert(errorMessage, 'error');
+                });
+        });
+
+        // Auto-generate student number if needed
+        studentNumberInput.addEventListener('focus', function() {
+            if (!this.value) {
+                const year = new Date().getFullYear();
+                const randomNum = Math.floor(Math.random() * 90000) + 10000;
+                this.value = `${year}-${randomNum}`;
+            }
+        });
+
+        // Check if remember me was previously set
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('rememberMe') === 'true') {
+                const savedEmail = localStorage.getItem('userEmail');
+                if (savedEmail) {
+                    loginEmailInput.value = savedEmail;
+                    document.getElementById('rememberMe').checked = true;
+                }
+            }
+            
+            // Check if user is already logged in
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    try {
+                        // Check if user is admin - redirect them away
+                        const adminDoc = await db.collection('admins').doc(user.uid).get();
+                        
+                        if (adminDoc.exists) {
+                            // Admin user - sign them out and show message
+                            await auth.signOut();
+                            showAlert('Administrative access detected. Please use the staff portal for admin access.', 'error');
+                            return;
+                        }
+                        
+                        // Regular student - redirect to student portal
+                        window.location.href = 'index.html';
+                    } catch (error) {
+                        console.error('Error checking user role:', error);
+                        // If there's an error, assume student and redirect
+                        window.location.href = 'index.html';
+                    }
+                }
+            });
+            
+            // Focus on the email field
+            loginEmailInput.focus();
+        });
+
+        // Initialize sample users if needed
+        async function initializeSampleUsers() {
+            try {
+                // Check if sample users already exist
+                const adminSnapshot = await db.collection('admins').limit(1).get();
+                const studentSnapshot = await db.collection('students').limit(1).get();
+                
+                if (adminSnapshot.empty) {
+                    console.log("No admin users found - create admin accounts in Firebase Console");
+                }
+                
+                if (studentSnapshot.empty) {
+                    console.log("No student users found - students will be auto-created on first login");
+                }
+            } catch (error) {
+                console.error("Error checking sample users:", error);
+            }
+        }
+
+        // Initialize sample users on load
+        initializeSampleUsers();
+    </script>
+</body>
+</html>

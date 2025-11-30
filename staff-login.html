@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Login - Rockview University</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #7c3aed;
+            --primary-hover: #6d28d9;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .login-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .logo-icon {
+            font-size: 2.5rem;
+            margin-right: 12px;
+        }
+        
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        .logo-text span {
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .login-body {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        
+        .input-with-icon input {
+            width: 100%;
+            padding: 14px 14px 14px 45px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .input-with-icon input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+        
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+        
+        .remember-me input {
+            margin-right: 8px;
+        }
+        
+        .forgot-password {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-button i {
+            margin-right: 10px;
+        }
+        
+        .login-button:hover {
+            background: var(--primary-hover);
+        }
+        
+        .login-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-error {
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success-color);
+            border: 1px solid #bbf7d0;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .demo-credentials {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-credentials h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        
+        .demo-credentials p {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        @media (max-width: 480px) {
+            .login-card {
+                border-radius: 12px;
+            }
+            
+            .login-header, .login-body {
+                padding: 25px 20px;
+            }
+            
+            .remember-forgot {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .forgot-password {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <i class="fas fa-user-shield logo-icon"></i>
+                    <div class="logo-text">
+                        <h1>ROCKVIEW UNIVERSITY</h1>
+                        <span>Staff Portal</span>
+                    </div>
+                </div>
+                <p>Staff & Administrator Access</p>
+            </div>
+            
+            <div class="login-body">
+                <div id="alertMessage" class="alert"></div>
+                
+              
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Staff Email</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" placeholder="staff@rockview.edu" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="remember-forgot">
+                        <div class="remember-me">
+                            <input type="checkbox" id="rememberMe">
+                            <label for="rememberMe">Remember me</label>
+                        </div>
+                        <a href="#" class="forgot-password">Forgot password?</a>
+                    </div>
+                    
+                    <button type="submit" class="login-button" id="loginButton">
+                        <span class="spinner" id="loginSpinner" style="display: none;"></span>
+                        <i class="fas fa-sign-in-alt"></i>
+                        Staff Login
+                    </button>
+                </form>
+                
+                <div class="login-footer">
+                    <p>Student? <a href="login.html" style="color: #7c3aed; text-decoration: none; font-weight: 500;">Go to Student Login</a></p>
+                    <p style="margin-top: 8px;">Need help? Contact IT Support: support@rockview.edu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyClWU6f1WdKKnJo3a4EEdusWdKdXd5LL4A",
+            authDomain: "rockview-university-46057.firebaseapp.com",
+            projectId: "rockview-university-46057",
+            storageBucket: "rockview-university-46057.firebasestorage.app",
+            messagingSenderId: "481696025854",
+            appId: "1:481696025854:web:a2067380abde8f040c69af",
+            measurementId: "G-5ZWLWVN1M7"
+        };
+
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM Elements
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordButton = document.getElementById('togglePassword');
+        const loginButton = document.getElementById('loginButton');
+        const loginSpinner = document.getElementById('loginSpinner');
+        const alertMessage = document.getElementById('alertMessage');
+        
+        // Toggle password visibility
+        togglePasswordButton.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+        
+        // Show alert message
+        function showAlert(message, type) {
+            alertMessage.textContent = message;
+            alertMessage.className = 'alert';
+            alertMessage.classList.add(`alert-${type}`);
+            alertMessage.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Hide alert message
+        function hideAlert() {
+            alertMessage.style.display = 'none';
+        }
+        
+        // Validate login form
+        function validateForm() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            if (!email) {
+                showAlert('Please enter your staff email', 'error');
+                emailInput.focus();
+                return false;
+            }
+            
+            if (!isValidEmail(email)) {
+                showAlert('Please enter a valid email address', 'error');
+                emailInput.focus();
+                return false;
+            }
+            
+            if (!password) {
+                showAlert('Please enter your password', 'error');
+                passwordInput.focus();
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showAlert('Password must be at least 6 characters long', 'error');
+                passwordInput.focus();
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Email validation
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Staff Authentication - Only allows admin users
+        async function authenticateStaff(email, password) {
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Check if user is admin
+                const adminDoc = await db.collection('admins').doc(user.uid).get();
+                
+                if (adminDoc.exists) {
+                    const adminData = adminDoc.data();
+                    return {
+                        success: true,
+                        user: {
+                            uid: user.uid,
+                            email: user.email,
+                            role: 'admin',
+                            ...adminData
+                        }
+                    };
+                } else {
+                    // User is not an admin - sign them out
+                    await auth.signOut();
+                    throw new Error('Access denied. Staff credentials required.');
+                }
+            } catch (error) {
+                let errorMessage = 'An error occurred during login';
+                
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address format';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = 'This staff account has been disabled';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = 'No staff account found with this email';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed login attempts. Please try again later';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                
+                throw new Error(errorMessage);
+            }
+        }
+        
+        // Handle login form submission
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) return;
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            // Show loading state
+            loginButton.disabled = true;
+            loginSpinner.style.display = 'inline-block';
+            loginButton.querySelector('i').style.display = 'none';
+            hideAlert();
+            
+            try {
+                const result = await authenticateStaff(email, password);
+                
+                if (result.success) {
+                    const userName = result.user.fullName || result.user.email.split('@')[0];
+                    showAlert(`Welcome, ${userName}! Redirecting to admin panel...`, 'success');
+                    
+                    // Store user data
+                    if (rememberMe) {
+                        localStorage.setItem('rememberMe', 'true');
+                        localStorage.setItem('userEmail', email);
+                    } else {
+                        sessionStorage.setItem('userEmail', email);
+                    }
+                    
+                    // Store admin info
+                    localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    
+                    // Redirect to admin panel
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                showAlert(error.message, 'error');
+                
+                // Reset loading state
+                loginButton.disabled = false;
+                loginSpinner.style.display = 'none';
+                loginButton.querySelector('i').style.display = 'inline-block';
+            }
+        });
+        
+        // Auto-fill demo credentials for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if remember me was previously set
+            if (localStorage.getItem('rememberMe') === 'true') {
+                const savedEmail = localStorage.getItem('userEmail');
+                if (savedEmail) {
+                    emailInput.value = savedEmail;
+                    document.getElementById('rememberMe').checked = true;
+                }
+            }
+            
+            // Check if user is already logged in as admin
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    try {
+                        const adminDoc = await db.collection('admins').doc(user.uid).get();
+                        if (adminDoc.exists) {
+                            window.location.href = 'admin.html';
+                        } else {
+                            // User is not admin, sign them out
+                            await auth.signOut();
+                        }
+                    } catch (error) {
+                        console.error('Error checking admin status:', error);
+                    }
+                }
+            });
+            
+            // Focus on the email field
+            emailInput.focus();
+        });
+        
+        // Forgot password link
+        document.querySelector('.forgot-password').addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            
+            if (!email || !isValidEmail(email)) {
+                showAlert('Please enter a valid staff email address to reset your password', 'error');
+                return;
+            }
+            
+            // Send password reset email
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    showAlert('Password reset email sent! Check your inbox for further instructions.', 'success');
+                })
+                .catch((error) => {
+                    let errorMessage = 'Failed to send reset email';
+                    
+                    switch (error.code) {
+                        case 'auth/invalid-email':
+                            errorMessage = 'Invalid email address';
+                            break;
+                        case 'auth/user-not-found':
+                            errorMessage = 'No staff account found with this email';
+                            break;
+                        default:
+                            errorMessage = error.message;
+                    }
+                    
+                    showAlert(errorMessage, 'error');
+                });
+        });
+
+        // Initialize sample admin account if needed
+        async function initializeAdminAccount() {
+            try {
+                const adminSnapshot = await db.collection('admins').limit(1).get();
+                
+                if (adminSnapshot.empty) {
+                    console.log("No admin accounts found. Create admin accounts in Firebase Console.");
+                    console.log("To create an admin account manually:");
+                    console.log("1. Go to Firebase Console → Authentication → Add User");
+                    console.log("2. Then go to Firestore → Create 'admins' collection");
+                    console.log("3. Add document with admin data");
+                }
+            } catch (error) {
+                console.error("Error checking admin accounts:", error);
+            }
+        }
+
+        // Initialize admin account check
+        initializeAdminAccount();
+    </script>
+</body>
+</html>
