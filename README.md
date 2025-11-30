@@ -1,6 +1,9 @@
-Paul Lubwika-2025559522
-Tenson Simulunga-2025015922
-Christopher Msimuko-
+Paul Lubwika-2025559522                                                                                                     
+
+Tenson Simulunga-2025015922                                                                                   
+
+Christopher Msimuko-2025554164                                                                     
+
 Kabuku Michelo-2025552530
 
  Rockview University Student Portal & Admin System
@@ -54,7 +57,7 @@ This project relies heavily on Firebase for user authentication and data storage
 2.  Enable Services:
     Authentication: Enable the Email/Password sign-in method.
     Firestore Database: Create a new Firestore database.
-3.  Get Configuration: In your Firebase project settings, find your Web App configuration snippet. It will look like this:
+3.  To get Configuration: In the Firebase project settings, find your Web App configuration snippet. It look like this:
 
     javascript
     const firebaseConfig = {
