@@ -1,3 +1,8 @@
+Paul Lubwika-2025559522
+Tenson Simulunga-2025015922
+Christopher Msimuko-
+Kabuku Michelo-2025552530
+
  Rockview University Student Portal & Admin System
 
 A simple web application designed for students and staff to manage and track student fee payments and academic clearance status.
